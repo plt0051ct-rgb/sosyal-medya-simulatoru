@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sosyal Medya Algoritma &amp; İçerik Yayılımı Simülatörü</title>
-  <meta name="description" content="Sosyal medya algoritmalarının içerik dağıtımını nasıl şekillendirdiğini simüle eden interaktif araç. Markov Zincirleri tabanlı geçiş modeli.">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -17,99 +15,153 @@
     }
     body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden }
 
+    /* ── SIDEBAR (compact) ─────────────────────────────────── */
     #sidebar {
-      width: 340px; min-width: 340px; background: var(--surface);
-      border-right: 1px solid var(--border); padding: 16px;
-      display: flex; flex-direction: column; gap: 10px; overflow-y: auto
+      width: 260px; min-width: 260px; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 14px 12px;
+      display: flex; flex-direction: column; gap: 8px; overflow-y: auto; z-index: 10
     }
-    #sidebar h1 {
-      font-size: 13px; font-weight: 800;
+    .sidebar-top {
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border)
+    }
+    .sidebar-top h1 {
+      flex: 1; font-size: 11px; font-weight: 800;
       background: linear-gradient(135deg, var(--accent), var(--green));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      text-align: center; padding-bottom: 10px; border-bottom: 1px solid var(--border)
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3
     }
+    #drawerToggle {
+      width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface2); color: var(--text2); cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .2s
+    }
+    #drawerToggle:hover { border-color: var(--accent); color: var(--text) }
+
     .section-title {
-      font-size: 10px; font-weight: 700; color: var(--text2);
+      font-size: 9px; font-weight: 700; color: var(--text2);
       text-transform: uppercase; letter-spacing: .8px;
-      border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px
+      border-top: 1px solid var(--border); padding-top: 7px; margin-top: 1px
     }
 
-    .preset-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px }
+    /* preset row */
+    .preset-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px }
     .preset-btn {
-      padding: 5px 4px; font-size: 10px; font-weight: 600;
-      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      padding: 4px 3px; font-size: 9px; font-weight: 600;
+      border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
       text-align: center; background: var(--surface2); color: var(--text2); transition: all .2s; line-height: 1.3
     }
     .preset-btn:hover { border-color: var(--accent); color: var(--text) }
-    .preset-btn small { display: block; font-weight: 400; color: var(--text2); font-size: 9px }
+    .preset-btn small { display: block; font-weight: 400; font-size: 8px; color: var(--text2) }
 
+    /* control group — compact, no descriptions */
     .cg { display: flex; flex-direction: column; gap: 3px }
-    .cg-header { display: flex; justify-content: space-between; align-items: baseline }
-    .cg-header label { font-size: 11px; font-weight: 600; color: var(--text); letter-spacing: .3px }
-    .cg-header .val { color: var(--accent2); font-weight: 700; font-size: 12px; white-space: nowrap; margin-left: 4px }
-    .cg-desc { font-size: 10px; color: var(--text2); line-height: 1.5 }
-    .cg-bench {
-      font-size: 9px; color: var(--text2); background: var(--surface2);
-      border-radius: 6px; padding: 4px 7px; display: flex; gap: 6px; flex-wrap: wrap
-    }
-    .cg-bench span { white-space: nowrap }
-    .ok { color: #2dd4bf } .warn { color: #fbbf24 } .bad { color: #f87171 }
+    .cg-header { display: flex; justify-content: space-between; align-items: center }
+    .cg-label { font-size: 10px; font-weight: 600; color: var(--text2) }
+    .cg-val   { color: var(--accent2); font-weight: 700; font-size: 11px; white-space: nowrap }
 
     input[type=range] {
-      -webkit-appearance: none; width: 100%; height: 5px;
+      -webkit-appearance: none; width: 100%; height: 4px;
       border-radius: 3px; background: var(--surface2); outline: none; cursor: pointer
     }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-      background: var(--accent); cursor: pointer; box-shadow: 0 0 10px rgba(124,106,239,.5)
+      -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; box-shadow: 0 0 8px rgba(124,106,239,.5)
     }
     input[type=number] {
-      width: 100%; padding: 6px 10px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: inherit; font-size: 12px; outline: none
+      width: 100%; padding: 5px 8px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text); font-family: inherit; font-size: 11px; outline: none
     }
-
     .btn {
-      padding: 10px; border: none; border-radius: var(--radius);
-      font-family: inherit; font-weight: 600; font-size: 13px; cursor: pointer; transition: all .2s
+      padding: 9px; border: none; border-radius: var(--radius);
+      font-family: inherit; font-weight: 600; font-size: 12px; cursor: pointer; transition: all .2s
     }
-    #btnRun { background: linear-gradient(135deg, var(--accent), #9b7aff); color: #fff; box-shadow: 0 4px 16px rgba(124,106,239,.3) }
-    #btnRun:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,106,239,.45) }
+    #btnRun { background: linear-gradient(135deg, var(--accent), #9b7aff); color: #fff; box-shadow: 0 4px 14px rgba(124,106,239,.3) }
+    #btnRun:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,106,239,.45) }
     #btnCSV { background: var(--surface2); color: var(--text2); border: 1px solid var(--border) }
     #btnCSV:hover { border-color: var(--accent); color: var(--text) }
 
-    #statusBox { background: var(--surface2); border-radius: var(--radius); padding: 12px; text-align: center; margin-top: auto }
-    #statusBadge { font-size: 16px; font-weight: 800; margin-bottom: 2px }
-    #tickInfo { font-size: 11px; color: var(--text2) }
+    #statusBox { background: var(--surface2); border-radius: var(--radius); padding: 10px; text-align: center; margin-top: auto }
+    #statusBadge { font-size: 14px; font-weight: 800; margin-bottom: 2px }
+    #tickInfo { font-size: 10px; color: var(--text2) }
 
+    /* ── DRAWER ────────────────────────────────────────────── */
+    #drawerOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      z-index: 99; opacity: 0; pointer-events: none; transition: opacity .3s
+    }
+    #drawerOverlay.open { opacity: 1; pointer-events: all }
+
+    #drawer {
+      position: fixed; top: 0; left: -420px; height: 100vh; width: 400px;
+      background: var(--surface); border-right: 1px solid var(--border);
+      z-index: 100; display: flex; flex-direction: column;
+      transition: left .35s cubic-bezier(.4,0,.2,1); overflow: hidden
+    }
+    #drawer.open { left: 0 }
+
+    #drawerHead {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0
+    }
+    #drawerHead h2 { font-size: 13px; font-weight: 700; color: var(--text) }
+    #drawerClose {
+      width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 7px;
+      background: var(--surface2); color: var(--text2); cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all .2s
+    }
+    #drawerClose:hover { border-color: var(--red); color: var(--red) }
+
+    #drawerBody { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px }
+
+    .dparam { border: 1px solid var(--border); border-radius: 10px; overflow: hidden }
+    .dparam-head {
+      background: var(--surface2); padding: 9px 12px;
+      font-size: 11px; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 8px
+    }
+    .dparam-head .dtag {
+      font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+      background: rgba(124,106,239,.15); color: var(--accent2)
+    }
+    .dparam-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 7px }
+    .dparam-desc { font-size: 11px; color: var(--text2); line-height: 1.6 }
+    .dbench { display: flex; flex-direction: column; gap: 3px }
+    .dbench-row { display: flex; align-items: center; gap: 7px; font-size: 10px }
+    .dbench-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0
+    }
+    .dbench-row span { color: var(--text2); line-height: 1.4 }
+
+    /* ── MAIN ──────────────────────────────────────────────── */
     #main {
-      flex: 1; padding: 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr 130px;
-      gap: 12px; height: 100vh; overflow: hidden
+      flex: 1; padding: 12px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr 120px;
+      gap: 10px; height: 100vh; overflow: hidden
     }
     .cc {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px;
+      border-radius: var(--radius); padding: 12px;
       display: flex; flex-direction: column; overflow: hidden
     }
     .cc h2 {
-      font-size: 11px; font-weight: 700; color: var(--text2);
-      margin-bottom: 3px; text-transform: uppercase; letter-spacing: .7px; flex-shrink: 0
+      font-size: 10px; font-weight: 700; color: var(--text2);
+      margin-bottom: 2px; text-transform: uppercase; letter-spacing: .7px; flex-shrink: 0
     }
-    .cc-sub { font-size: 9px; color: var(--text2); margin-bottom: 6px; flex-shrink: 0; line-height: 1.4 }
+    .cc-sub { font-size: 9px; color: var(--text2); margin-bottom: 5px; flex-shrink: 0; line-height: 1.4 }
     .cw { flex: 1; position: relative; min-height: 0 }
 
-    #gaugeWrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px }
-    #gaugeValue { font-size: 46px; font-weight: 800; line-height: 1 }
-    #gaugeBar { width: 85%; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden }
+    #gaugeWrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px }
+    #gaugeValue { font-size: 44px; font-weight: 800; line-height: 1 }
+    #gaugeBar { width: 85%; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden }
     #gaugeFill { height: 100%; border-radius: 4px; transition: width .4s, background .4s; width: 0% }
-    #gaugeLabel { font-size: 13px; font-weight: 700 }
-    .gauge-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 90%; margin-top: 4px }
-    .gstat { background: var(--surface2); border-radius: 7px; padding: 4px 8px; text-align: center }
-    .gstat-val { font-size: 12px; font-weight: 700; color: var(--accent2) }
-    .gstat-lbl { font-size: 9px; color: var(--text2) }
+    #gaugeLabel { font-size: 12px; font-weight: 700 }
+    .gauge-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 90%; margin-top: 3px }
+    .gstat { background: var(--surface2); border-radius: 6px; padding: 4px 7px; text-align: center }
+    .gstat-val { font-size: 11px; font-weight: 700; color: var(--accent2) }
+    .gstat-lbl { font-size: 8px; color: var(--text2) }
 
     #logPanel { grid-column: 1 / -1 }
     #logScroll {
@@ -117,129 +169,161 @@
       font-size: 10px; color: var(--text2); line-height: 1.8;
       min-height: 0; white-space: nowrap; font-family: monospace
     }
-    .log-event { color: #fbbf24 }
-    .log-good  { color: #2dd4bf }
-    .log-bad   { color: #f87171 }
+    .log-event { color: #fbbf24 } .log-good { color: #2dd4bf } .log-bad { color: #f87171 }
   </style>
 </head>
-
 <body>
+
+<!-- ── DRAWER OVERLAY ── -->
+<div id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ── DRAWER ── -->
+<div id="drawer">
+  <div id="drawerHead">
+    <h2>📖 Parametre Açıklamaları</h2>
+    <button id="drawerClose" onclick="closeDrawer()">✕</button>
+  </div>
+  <div id="drawerBody">
+
+    <div class="dparam">
+      <div class="dparam-head">Prodüksiyon Kalitesi <span class="dtag">İçerik</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">Görsel/ses kalitesi, kurgu ve senaryo bütünlüğü. Algoritmanın içeriğe verdiği kalite puanıdır. Hook oranına ±2pp/10 puan sapma, hold oranına ±3pp/10 puan sapma kadar bonus ya da ceza ekler.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>0–30 → Düşük eforsuz içerik (akıllı telefon, ham çekim)</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>40–70 → Tutarlı yayıncı düzeyi (ort. ~55–65)</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>80–100 → Profesyonel prodüksiyon, renk düzeltme, ses tasarımı</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Hook Oranı — İlk 3 Saniye <span class="dtag">İçerik</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">İzleyicinin ilk 3 saniyeyi geçip izlemeye devam etme yüzdesi. TikTok ve Instagram Reels algoritmalarında en kritik sinyal. Bu oran düşükse içerik geniş kitleye hiç gösterilmez; yüksekse algoritma sonraki dağıtım dalgasını büyütür.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>%0–20 → Zayıf; izleyici ilk karede kaydırıyor</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>%25–35 → Sektör ortalaması (TikTok Creator Academy)</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>%45–60 → İyi · %60+ → Viral potansiyel</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Hold Oranı — Videoyu Bitirme <span class="dtag">İçerik</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">Hook'tan geçen kullanıcıların videoyu sonuna kadar izleme yüzdesi (30s video varsayımı). Yüksek hold oranı algoritmaya "bu içerik değer taşıyor" sinyali verir ve öneri havuzunu genişletir.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>%0–30 → İzleyici kaçıyor, içerik tutmuyor</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>%40–55 → Sektör ortalaması</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>%60–75 → İyi · %75+ → Mükemmel</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Etkileşim Oranı — ER (%) <span class="dtag">İçerik</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">Beğeni + Yorum + Paylaşım toplamının izlenme sayısına oranı. Simülasyonda: videoyu bitiren (held) kullanıcılar, ortada bırakan (dropped) kullanıcılara göre 3–4x daha yüksek etkileşim üretir. Kaynak: Sprout Social 2024 Benchmark.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>%0–1 → Pasif kitle, düşük sadakat</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>%2–5 → Instagram genel ortalaması</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>%6–10 → Bağlı topluluk · %10+ → Niş/mega-fan kitle</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Hesap Uyum Skoru <span class="dtag">Hesap</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">Hesabın topluluk kurallarına uyum geçmişi. 50 altında "shadow-ban" durumunu simüle eder: içerik yayınlanmaya devam eder ama algoritmik dağıtım %85 oranında bastırılır ve algoritma skoru 35 tavanıyla sınırlanır.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>0–49 → Shadow-ban aktif; tavan skor 35, dağıtım ×0.15</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>50–79 → Kısmi kısıtlama; skor scale edilir</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>80–100 → Normal tam dağıtım</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Paylaşım Saati (0–23) <span class="dtag">Zamanlama</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc">İçeriğin yayınlandığı saat. Zirve saatlerde (18:00–21:00) platformun aktif kullanıcı havuzu daha büyük olduğundan ilk dağıtım çarpanı yükselir. Simülasyon bu saatten itibaren ilerleyerek her tick'e doğru saat çarpanını uygular. Kaynak: Meta Business Suite &amp; Sprout Social global engagement verisi.</p>
+        <div class="dbench">
+          <div class="dbench-row"><div class="dbench-dot" style="background:#f87171"></div><span>00:00–08:00 → Düşük aktivite (×0.5)</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#fbbf24"></div><span>09:00–17:00 → Orta aktivite (×1.0–1.3)</span></div>
+          <div class="dbench-row"><div class="dbench-dot" style="background:#2dd4bf"></div><span>18:00–21:00 → Akşam zirve (×1.8)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dparam">
+      <div class="dparam-head">Takipçi Sayısı &amp; Süre <span class="dtag">Simülasyon</span></div>
+      <div class="dparam-body">
+        <p class="dparam-desc"><b>Takipçi Sayısı:</b> Başlangıç saatlik izlenme havuzunu belirler. Formül: Takipçi × Dağıtım çarpanı × Saat çarpanı × %5 organik erişim + gürültü.<br><br><b>Simülasyon Süresi:</b> Kaç saat simüle edileceği. 48s = 2 gün, 168s = 1 hafta.<br><br><b>Seed:</b> Aynı seed ile aynı rastgele dizi üretilir → tekrarlanabilir simülasyon. Farklı seed = farklı gürültü paterni.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SIDEBAR ── -->
 <div id="sidebar">
-  <h1>📊 Sosyal Medya Algoritma ve İçerik Yayılımı Simülatörü</h1>
+  <div class="sidebar-top">
+    <h1>📊 Sosyal Medya Algoritma Simülatörü</h1>
+    <button id="drawerToggle" onclick="openDrawer()" title="Parametre açıklamaları">ℹ</button>
+  </div>
 
   <div class="section-title">Hazır Senaryolar</div>
   <div class="preset-row">
-    <button class="preset-btn" onclick="applyPreset('new')">🌱 Yeni Hesap<small>&lt;1K takipçi, düşük metrikler</small></button>
-    <button class="preset-btn" onclick="applyPreset('growing')">📈 Büyüyen Hesap<small>~10K, orta metrikler</small></button>
-    <button class="preset-btn" onclick="applyPreset('viral')">🚀 Viral İçerik<small>Yüksek hook &amp; hold oranı</small></button>
-    <button class="preset-btn" onclick="applyPreset('banned')">🔴 Kısıtlı Hesap<small>Gizli ban senaryosu</small></button>
+    <button class="preset-btn" onclick="applyPreset('new')">🌱 Yeni Hesap<small>&lt;1K takipçi</small></button>
+    <button class="preset-btn" onclick="applyPreset('growing')">📈 Büyüyen<small>~10K, orta</small></button>
+    <button class="preset-btn" onclick="applyPreset('viral')">🚀 Viral<small>Yüksek hook/hold</small></button>
+    <button class="preset-btn" onclick="applyPreset('banned')">🔴 Kısıtlı<small>Shadow-ban</small></button>
   </div>
 
   <div class="section-title">İçerik Parametreleri</div>
 
   <div class="cg">
-    <div class="cg-header">
-      <label>Prodüksiyon Kalitesi</label>
-      <span class="val" id="vQ">70</span>
-    </div>
-    <div class="cg-desc">Görsel/ses kalitesi, kurgu ve senaryo bütünlüğü. Algoritmanın içeriğe verdiği kalite puanıdır; hook ve hold oranlarına ±2pp/10 puan sapma kadar bonus/ceza ekler.</div>
+    <div class="cg-header"><span class="cg-label">Prodüksiyon Kalitesi</span><span class="cg-val" id="vQ">70</span></div>
     <input type="range" id="sQ" min="0" max="100" value="70">
-    <div class="cg-bench">
-      <span class="bad">0–30: Akıllı telefon, düşük efor</span>
-      <span class="warn">40–70: Tutarlı yayıncı</span>
-      <span class="ok">80–100: Profesyonel prodüksiyon</span>
-    </div>
   </div>
-
   <div class="cg">
-    <div class="cg-header">
-      <label>Hook Oranı — İlk 3 Saniye</label>
-      <span class="val" id="vHook">45%</span>
-    </div>
-    <div class="cg-desc">İzleyicinin ilk 3 saniyeyi geçip izlemeye devam etme oranı. TikTok ve Instagram Reels algoritmalarında en kritik sinyal: düşükse içerik geniş kitleye gösterilmez.</div>
+    <div class="cg-header"><span class="cg-label">Hook Oranı — İlk 3 Saniye</span><span class="cg-val" id="vHook">45%</span></div>
     <input type="range" id="sHook" min="0" max="100" value="45">
-    <div class="cg-bench">
-      <span class="bad">%0–20: Zayıf (kaydırılıyor)</span>
-      <span class="warn">%25–35: Sektör ortalaması</span>
-      <span class="ok">%45–60: İyi · %60+: Viral potansiyel</span>
-    </div>
   </div>
-
   <div class="cg">
-    <div class="cg-header">
-      <label>Hold Oranı — Videoyu Bitirme</label>
-      <span class="val" id="vHold">50%</span>
-    </div>
-    <div class="cg-desc">Hook'tan geçen kullanıcıların videoyu sonuna kadar izleme oranı. Algoritma bunu "içerik değer taşıyor" sinyali olarak okur ve öneri havuzunu genişletir.</div>
+    <div class="cg-header"><span class="cg-label">Hold Oranı — Videoyu Bitirme</span><span class="cg-val" id="vHold">50%</span></div>
     <input type="range" id="sHold" min="0" max="100" value="50">
-    <div class="cg-bench">
-      <span class="bad">%0–30: İzleyici kaçıyor</span>
-      <span class="warn">%40–55: Sektör ortalaması</span>
-      <span class="ok">%60–75: İyi · %75+: Mükemmel</span>
-    </div>
   </div>
-
   <div class="cg">
-    <div class="cg-header">
-      <label>Etkileşim Oranı — ER (%)</label>
-      <span class="val" id="vEng">5%</span>
-    </div>
-    <div class="cg-desc">Beğeni + Yorum + Paylaşım toplamının izlenme sayısına oranı. Sprout Social 2024 verilerine göre Instagram'da mikro-hesaplar %3–6, makro-hesaplar %1–2 ER üretir.</div>
+    <div class="cg-header"><span class="cg-label">Etkileşim Oranı — ER</span><span class="cg-val" id="vEng">5%</span></div>
     <input type="range" id="sEng" min="0" max="30" value="5">
-    <div class="cg-bench">
-      <span class="bad">%0–1: Pasif kitle</span>
-      <span class="warn">%2–5: Instagram ortalaması</span>
-      <span class="ok">%6–10: Bağlı topluluk · %10+: Niş</span>
-    </div>
   </div>
 
-  <div class="section-title">Hesap ve Zamanlama Parametreleri</div>
+  <div class="section-title">Hesap &amp; Zamanlama</div>
 
   <div class="cg">
-    <div class="cg-header">
-      <label>Hesap Uyum Skoru</label>
-      <span class="val" id="vHealth">95</span>
-    </div>
-    <div class="cg-desc">Hesabın topluluk kuralları geçmişi. 50 altı "shadow-ban" durumunu simüle eder: içerik yayınlanmaya devam eder ama algoritmik dağıtım %85 oranında bastırılır.</div>
+    <div class="cg-header"><span class="cg-label">Hesap Uyum Skoru</span><span class="cg-val" id="vHealth">95</span></div>
     <input type="range" id="sHealth" min="0" max="100" value="95">
-    <div class="cg-bench">
-      <span class="bad">0–49: Shadow-ban → tavan skor %35</span>
-      <span class="warn">50–79: Kısmi kısıtlama</span>
-      <span class="ok">80–100: Normal tam dağıtım</span>
-    </div>
   </div>
-
   <div class="cg">
-    <div class="cg-header">
-      <label>Paylaşım Saati (0–23)</label>
-      <span class="val" id="vT">19:00</span>
-    </div>
-    <div class="cg-desc">İçeriğin yayınlandığı saat. Zirve saatlerde (18–21) platformun aktif kullanıcı havuzu daha büyük olduğundan ilk saatlik dağıtım çarpanı yükselir.</div>
+    <div class="cg-header"><span class="cg-label">Paylaşım Saati (0–23)</span><span class="cg-val" id="vT">19:00</span></div>
     <input type="range" id="sT" min="0" max="23" value="19" step="1">
-    <div class="cg-bench">
-      <span class="bad">00–08: Düşük aktivite (×0.5)</span>
-      <span class="warn">09–17: Orta (×1.0–1.3)</span>
-      <span class="ok">18–21: Zirve (×1.8)</span>
-    </div>
   </div>
 
   <div class="section-title">Simülasyon Ayarları</div>
 
   <div class="cg">
-    <div class="cg-header"><label>Takipçi Sayısı</label><span class="val" id="vF">5.000</span></div>
-    <div class="cg-desc">Hesabın mevcut takipçi tabanı. Başlangıç saatlik izlenme havuzunu belirler.</div>
+    <div class="cg-header"><span class="cg-label">Takipçi Sayısı</span><span class="cg-val" id="vF">5.000</span></div>
     <input type="range" id="sF" min="100" max="100000" value="5000" step="100">
   </div>
-
   <div class="cg">
-    <div class="cg-header"><label>Simülasyon Süresi (saat)</label><span class="val" id="vH">48</span></div>
-    <div class="cg-desc">İçerik yayınlandıktan kaç saat sonrasına kadar simüle edilsin.</div>
+    <div class="cg-header"><span class="cg-label">Simülasyon Süresi (saat)</span><span class="cg-val" id="vH">48</span></div>
     <input type="range" id="sH" min="1" max="168" value="48">
   </div>
-
   <div class="cg">
-    <div class="cg-header"><label>Rastgele Tohum (Seed)</label></div>
-    <div class="cg-desc">Aynı seed her seferinde aynı simülasyonu üretir. Farklı seed = farklı rastgele dizi.</div>
+    <div class="cg-header"><span class="cg-label">Rastgele Tohum (Seed)</span></div>
     <input type="number" id="sSeed" value="42" min="1" max="99999">
   </div>
 
@@ -252,19 +336,18 @@
   </div>
 </div>
 
+<!-- ── MAIN ── -->
 <div id="main">
   <div class="cc">
-    <h2>📈 İzlenme ve Toplam Ekranda Kalma Süresi</h2>
-    <p class="cc-sub">Mavi alan: birikimli ekran süresi (sol eksen, saat) · Mor kesik: saatlik izlenme sayısı (sağ eksen)</p>
+    <h2>📈 İzlenme &amp; Toplam Ekranda Kalma Süresi</h2>
+    <p class="cc-sub">Mavi alan: birikimli ekran süresi (saat, sol eksen) · Mor kesik: saatlik izlenme (sağ eksen)</p>
     <div class="cw"><canvas id="c1"></canvas></div>
   </div>
-
   <div class="cc">
     <h2>🔽 İzleyici Akış Hunisi — Markov Geçişleri</h2>
-    <p class="cc-sub">İzlenim → Hook (%3s+) → Hold (bitiş). Her kademe Markov geçiş olasılığı taşır; kaçan kullanıcılar drop/scroll havuzuna girer.</p>
+    <p class="cc-sub">İzlenim → Hook (%3s+) → Hold (bitiş). Her kademe Markov geçiş olasılığı taşır.</p>
     <div class="cw"><canvas id="c2"></canvas></div>
   </div>
-
   <div class="cc">
     <h2>⚡ Algoritma Dağıtım Skoru</h2>
     <div id="gaugeWrap">
@@ -279,13 +362,11 @@
       </div>
     </div>
   </div>
-
   <div class="cc">
     <h2>💬 Etkileşim Dağılımı — Beğeni / Yorum / Paylaşım</h2>
-    <p class="cc-sub">ER = (Beğeni + Yorum + Paylaşım) / Toplam İzlenme × 100. Held kullanıcılar dropped kullanıcılardan 3–4x daha fazla etkileşim üretir.</p>
+    <p class="cc-sub">ER = (Beğeni + Yorum + Paylaşım) / Toplam İzlenme × 100</p>
     <div class="cw"><canvas id="c3"></canvas></div>
   </div>
-
   <div class="cc" id="logPanel">
     <h2>🗒 Simülasyon Olay Günlüğü — Her 6 Saatte Bir Özet</h2>
     <div id="logScroll">Simülasyonu başlatın…</div>
@@ -293,10 +374,7 @@
 </div>
 
 <script>
-/* ============================================================
-   SEEDED PRNG — Mulberry32
-   Aynı seed ile deterministik ve tekrarlanabilir simülasyon sağlar.
-   ============================================================ */
+/* SEEDED PRNG */
 function mulberry32(a) {
   return function() {
     a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -307,84 +385,32 @@ function mulberry32(a) {
 }
 let rng;
 
-/* ============================================================
-   ZAMAN DEĞERLERİ (30 saniyelik video varsayımı)
-   Kaynak: TikTok Creator Academy & Meta Business Suite
-   izleme derinliği ortalamalarından türetilmiştir.
-   ============================================================ */
-const SEC_SCROLL  = 2;    // İlk kareye bakar, kaydırır
-const SEC_DROP    = 10;   // Hook geçer, bitmeden çıkar (ort. dropout noktası)
-const SEC_HELD    = 30;   // Sonuna kadar izler (30s video)
-const SEC_COMMENT = 15;   // Yorum → ek ekranda kalma süresi
-const SEC_SHARE   = 45;   // Paylaşım → en yüksek zaman katkısı
+const SEC_SCROLL = 2, SEC_DROP = 10, SEC_HELD = 30, SEC_COMMENT = 15, SEC_SHARE = 45;
 
-/* ============================================================
-   METRİK HESAPLAMA — MARKOV ZİNCİRİ MODELİ
-   Kullanıcı geçişleri:
-     IMPRESSION -[hookRate]-> HOOKED -[holdRate]-> HELD
-   Her kademeden kaçan kullanıcılar DROP veya SCROLL havuzuna düşer.
-   ============================================================ */
 function calcMetrics(impressions, q, hookRate, holdRate, erPct) {
-  // Kalite ±2pp/10 puan sapma olarak hook/hold oranlarına yansır
   const hr  = Math.max(0, Math.min(1, (hookRate / 100)  + ((q - 50) * 0.002)));
   const hlr = Math.max(0, Math.min(1, (holdRate / 100) + ((q - 50) * 0.003)));
   const er  = erPct / 100;
-
-  const hooked   = Math.round(impressions * hr);
-  const scrolled = impressions - hooked;
-  const held     = Math.round(hooked * hlr);
-  const dropped  = hooked - held;
-
-  // Etkileşim olasılıkları: held > dropped >> scrolled
-  // Sprout Social 2024 Benchmark'tan türetilmiş oranlar
-  const likeProbHeld    = Math.min(er * 0.55, 0.40);
-  const likeProbDrop    = Math.min(er * 0.15, 0.10);
-  const commentProbHeld = Math.min(er * 0.20, 0.15);
-  const commentProbDrop = Math.min(er * 0.04, 0.03);
-  const shareProbHeld   = Math.min(er * 0.25, 0.20);
-  const shareProbDrop   = Math.min(er * 0.05, 0.04);
-
-  const likes    = Math.round(held * likeProbHeld    + dropped * likeProbDrop);
-  const comments = Math.round(held * commentProbHeld + dropped * commentProbDrop);
-  const shares   = Math.round(held * shareProbHeld   + dropped * shareProbDrop);
-
-  let timeSec = 0;
-  timeSec += scrolled * SEC_SCROLL;
-  timeSec += dropped  * SEC_DROP;
-  timeSec += held     * SEC_HELD;
-  timeSec += comments * SEC_COMMENT;
-  timeSec += shares   * SEC_SHARE;
-
+  const hooked = Math.round(impressions * hr), scrolled = impressions - hooked;
+  const held   = Math.round(hooked * hlr),    dropped  = hooked - held;
+  const likes    = Math.round(held * Math.min(er*.55,.40) + dropped * Math.min(er*.15,.10));
+  const comments = Math.round(held * Math.min(er*.20,.15) + dropped * Math.min(er*.04,.03));
+  const shares   = Math.round(held * Math.min(er*.25,.20) + dropped * Math.min(er*.05,.04));
+  let timeSec = scrolled*SEC_SCROLL + dropped*SEC_DROP + held*SEC_HELD + comments*SEC_COMMENT + shares*SEC_SHARE;
   return { hooked, held, scrolled, dropped, likes, comments, shares, timeSec };
 }
 
-/* ============================================================
-   ALGORİTMA SKORU — "Expected Time" Modeli
-   Meta ve TikTok'un değerlendirme mekanizmasının basitleştirilmesi:
-   algoritma, her izlenimde ortalama ne kadar süre üretildiğine bakarak
-   bir sonraki dağıtım dalgasını belirler.
-   Hesap sağlığı kapı bekçisi görevi görür (shadow-ban mekanizması).
-   ============================================================ */
 function calcAlgoScore(expectedTimePerImp, health) {
-  // 14s/izlenme üzeri olağanüstü; 6s/izlenme sektör ortalaması (30s video)
   let score = Math.min(100, Math.max(0, (expectedTimePerImp / 14) * 100));
-
-  if (health < 50) {
-    score = Math.min(score, 35);   // Shadow-ban: tavan skor %35
-  } else if (health < 80) {
-    score *= (health / 80);        // Kısmi kısıtlama
-  }
+  if (health < 50) score = Math.min(score, 35);
+  else if (health < 80) score *= (health / 80);
   return score;
 }
-
 function distState(s) {
-  if (s >= 70) return { l: 'TREND', icon: '🟢', c: '#2dd4bf', m: 2.5 };
-  if (s >= 40) return { l: 'NORMAL', icon: '🟡', c: '#fbbf24', m: 1.0 };
-  return { l: 'KISITLI (SHADOW-BAN)', icon: '🔴', c: '#f87171', m: 0.15 };
+  if (s >= 70) return { l: 'TREND',               icon: '🟢', c: '#2dd4bf', m: 2.5 };
+  if (s >= 40) return { l: 'NORMAL',              icon: '🟡', c: '#fbbf24', m: 1.0 };
+  return            { l: 'KISITLI (SHADOW-BAN)', icon: '🔴', c: '#f87171', m: 0.15 };
 }
-
-// Saat bazlı aktivite çarpanı
-// Kaynak: Meta Business Suite ve Sprout Social global engagement verisi
 function hourMult(h) {
   const hr = ((h % 24) + 24) % 24;
   if (hr >= 18 && hr <= 21) return 1.8;
@@ -393,272 +419,162 @@ function hourMult(h) {
   return 0.5;
 }
 
-/* ============================================================
-   HAZIR SENARYOLAR — Gerçekçi başlangıç noktaları
-   ============================================================ */
-const PRESETS = {
-  new:     { q: 40, hook: 22, hold: 35, er: 3,  health: 90, hour: 14, followers: 800,   simH: 48,  seed: 11 },
-  growing: { q: 65, hook: 38, hold: 52, er: 6,  health: 92, hour: 19, followers: 12000, simH: 72,  seed: 77 },
-  viral:   { q: 88, hook: 68, hold: 74, er: 12, health: 97, hour: 20, followers: 45000, simH: 120, seed: 42 },
-  banned:  { q: 70, hook: 45, hold: 55, er: 5,  health: 30, hour: 19, followers: 8000,  simH: 48,  seed: 33 }
-};
-const PRESET_NAMES = { new: '🌱 Yeni Hesap', growing: '📈 Büyüyen Hesap', viral: '🚀 Viral İçerik', banned: '🔴 Kısıtlı Hesap' };
+/* DRAWER */
+function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
 
+/* PRESETS */
+const PRESETS = {
+  new:     { q:40, hook:22, hold:35, er:3,  health:90, hour:14, followers:800,   simH:48,  seed:11 },
+  growing: { q:65, hook:38, hold:52, er:6,  health:92, hour:19, followers:12000, simH:72,  seed:77 },
+  viral:   { q:88, hook:68, hold:74, er:12, health:97, hour:20, followers:45000, simH:120, seed:42 },
+  banned:  { q:70, hook:45, hold:55, er:5,  health:30, hour:19, followers:8000,  simH:48,  seed:33 }
+};
+const PRESET_NAMES = { new:'🌱 Yeni Hesap', growing:'📈 Büyüyen Hesap', viral:'🚀 Viral İçerik', banned:'🔴 Kısıtlı Hesap' };
 function applyPreset(key) {
   const p = PRESETS[key];
-  setSlider('sQ', p.q); setSlider('sHook', p.hook); setSlider('sHold', p.hold);
-  setSlider('sEng', p.er); setSlider('sHealth', p.health); setSlider('sT', p.hour);
-  setSlider('sF', p.followers); setSlider('sH', p.simH);
+  setSlider('sQ',p.q); setSlider('sHook',p.hook); setSlider('sHold',p.hold);
+  setSlider('sEng',p.er); setSlider('sHealth',p.health); setSlider('sT',p.hour);
+  setSlider('sF',p.followers); setSlider('sH',p.simH);
   document.getElementById('sSeed').value = p.seed;
-  document.getElementById('tickInfo').textContent = 'Senaryo: ' + PRESET_NAMES[key] + ' — Çalıştırmaya hazır';
+  document.getElementById('tickInfo').textContent = 'Senaryo: ' + PRESET_NAMES[key];
 }
-function setSlider(id, val) {
-  const el = document.getElementById(id);
-  el.value = val;
-  el.dispatchEvent(new Event('input'));
-}
+function setSlider(id, val) { const el=document.getElementById(id); el.value=val; el.dispatchEvent(new Event('input')); }
 
-/* ============================================================
-   SLIDER BINDING
-   ============================================================ */
+/* SLIDER BINDINGS */
 [
-  ['sQ',     'vQ',     v => v],
-  ['sHook',  'vHook',  v => v + '%'],
-  ['sHold',  'vHold',  v => v + '%'],
-  ['sEng',   'vEng',   v => v + '%'],
-  ['sHealth','vHealth',v => v],
-  ['sT',     'vT',     v => String(v).padStart(2,'0') + ':00'],
-  ['sF',     'vF',     v => Number(v).toLocaleString('tr-TR')],
-  ['sH',     'vH',     v => v]
-].forEach(([id, did, fmt]) => {
-  document.getElementById(id).addEventListener('input', e => {
-    document.getElementById(did).textContent = fmt(e.target.value);
-  });
+  ['sQ','vQ',v=>v], ['sHook','vHook',v=>v+'%'], ['sHold','vHold',v=>v+'%'],
+  ['sEng','vEng',v=>v+'%'], ['sHealth','vHealth',v=>v],
+  ['sT','vT',v=>String(v).padStart(2,'0')+':00'],
+  ['sF','vF',v=>Number(v).toLocaleString('tr-TR')], ['sH','vH',v=>v]
+].forEach(([id,did,fmt]) => {
+  document.getElementById(id).addEventListener('input', e => { document.getElementById(did).textContent = fmt(e.target.value); });
 });
 
-/* ============================================================
-   GRAFİK KURULUMU
-   ============================================================ */
+/* CHARTS */
 let ch1, ch2, ch3;
-const axStyle = {
-  x: { ticks: { color: '#7e849a', font: { size: 10 } }, grid: { color: '#1e2236' } },
-  y: { ticks: { color: '#7e849a', font: { size: 10 } }, grid: { color: '#1e2236' }, beginAtZero: true }
-};
-
+const axS = { x:{ticks:{color:'#7e849a',font:{size:10}},grid:{color:'#1e2236'}}, y:{ticks:{color:'#7e849a',font:{size:10}},grid:{color:'#1e2236'},beginAtZero:true} };
 function initCharts() {
   if (ch1) { ch1.destroy(); ch2.destroy(); ch3.destroy(); }
-  ['c1','c2','c3'].forEach(id => {
-    const old = document.getElementById(id);
-    const canvas = document.createElement('canvas');
-    canvas.id = id;
-    old.parentNode.replaceChild(canvas, old);
-  });
-
+  ['c1','c2','c3'].forEach(id => { const o=document.getElementById(id); const c=document.createElement('canvas'); c.id=id; o.parentNode.replaceChild(c,o); });
   ch1 = new Chart(document.getElementById('c1'), {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [
-        { label: 'Birikimli Ekran Süresi (Saat)', data: [], borderColor: '#2dd4bf', backgroundColor: 'rgba(45,212,191,.1)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2, yAxisID: 'y' },
-        { label: 'Saatlik Izlenme', data: [], borderColor: '#7c6aef', borderDash: [4,4], tension: .4, pointRadius: 0, borderWidth: 1.5, yAxisID: 'y2', fill: false }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#7e849a', font: { size: 10 }, boxWidth: 12 } } },
-      scales: {
-        x: axStyle.x,
-        y:  { type: 'linear', position: 'left',  ticks: { color: '#2dd4bf', font: { size: 10 } }, grid: { color: '#1e2236' }, beginAtZero: true, title: { display: true, text: 'Saat', color: '#2dd4bf', font: { size: 9 } } },
-        y2: { type: 'linear', position: 'right', ticks: { color: '#7c6aef', font: { size: 10 } }, grid: { drawOnChartArea: false }, beginAtZero: true, title: { display: true, text: 'Izlenme', color: '#7c6aef', font: { size: 9 } } }
+    type:'line', data:{ labels:[], datasets:[
+      {label:'Birikimli Ekran Süresi (Saat)',data:[],borderColor:'#2dd4bf',backgroundColor:'rgba(45,212,191,.1)',fill:true,tension:.4,pointRadius:0,borderWidth:2,yAxisID:'y'},
+      {label:'Saatlik Izlenme',data:[],borderColor:'#7c6aef',borderDash:[4,4],tension:.4,pointRadius:0,borderWidth:1.5,yAxisID:'y2',fill:false}
+    ]},
+    options:{ responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#7e849a',font:{size:10},boxWidth:12}}},
+      scales:{ x:axS.x,
+        y:{type:'linear',position:'left',ticks:{color:'#2dd4bf',font:{size:10}},grid:{color:'#1e2236'},beginAtZero:true,title:{display:true,text:'Saat',color:'#2dd4bf',font:{size:9}}},
+        y2:{type:'linear',position:'right',ticks:{color:'#7c6aef',font:{size:10}},grid:{drawOnChartArea:false},beginAtZero:true,title:{display:true,text:'Izlenme',color:'#7c6aef',font:{size:9}}}
       }
     }
   });
-
   ch2 = new Chart(document.getElementById('c2'), {
-    type: 'bar',
-    data: {
-      labels: ['Izlenme', 'Hook (3s+)', 'Hold (Bitis)'],
-      datasets: [{ label: 'Kullanici', data: [0,0,0], backgroundColor: ['#636e72','#a59afb','#7c6aef'], borderRadius: 6, barPercentage: .7 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: axStyle
-    }
+    type:'bar', data:{ labels:['Izlenme','Hook (3s+)','Hold (Bitis)'], datasets:[{label:'Kullanici',data:[0,0,0],backgroundColor:['#636e72','#a59afb','#7c6aef'],borderRadius:6,barPercentage:.7}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:axS}
   });
-
   ch3 = new Chart(document.getElementById('c3'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Begeni', 'Yorum', 'Paylasim'],
-      datasets: [{ data: [0,0,0], backgroundColor: ['#f87171','#fbbf24','#2dd4bf'], borderWidth: 0, hoverOffset: 6 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '65%',
-      plugins: { legend: { labels: { color: '#7e849a', font: { size: 10 }, boxWidth: 10, padding: 8 }, position: 'right' } }
-    }
+    type:'doughnut', data:{labels:['Begeni','Yorum','Paylasim'],datasets:[{data:[0,0,0],backgroundColor:['#f87171','#fbbf24','#2dd4bf'],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{labels:{color:'#7e849a',font:{size:10},boxWidth:10,padding:8},position:'right'}}}
   });
 }
 
-/* ============================================================
-   SİMÜLASYON MOTORU
-   ============================================================ */
-let simData = [], simTimer = null;
-
+/* SIMULATION */
+let simData=[], simTimer=null;
 function resetChartData() {
   if (!ch1) return;
-  ch1.data.labels = []; ch1.data.datasets.forEach(ds => { ds.data = [] }); ch1.update();
-  ch2.data.datasets[0].data = [0,0,0]; ch2.update();
-  ch3.data.datasets[0].data = [0,0,0]; ch3.update();
+  ch1.data.labels=[]; ch1.data.datasets.forEach(ds=>{ds.data=[];}); ch1.update();
+  ch2.data.datasets[0].data=[0,0,0]; ch2.update();
+  ch3.data.datasets[0].data=[0,0,0]; ch3.update();
 }
-
-function addLog(msg, cls) {
-  const div = document.getElementById('logScroll');
-  const span = document.createElement('span');
-  if (cls) span.className = cls;
-  span.textContent = msg;
-  div.appendChild(span);
-  div.scrollLeft = div.scrollWidth;
-}
+function addLog(msg, cls) { const d=document.getElementById('logScroll'); const s=document.createElement('span'); if(cls)s.className=cls; s.textContent=msg; d.appendChild(s); d.scrollLeft=d.scrollWidth; }
 
 function runSim() {
-  if (simTimer) { clearTimeout(simTimer); simTimer = null; }
-  simData = [];
-  if (!ch1) initCharts();
-  resetChartData();
-  document.getElementById('logScroll').textContent = '';
+  if (simTimer) { clearTimeout(simTimer); simTimer=null; }
+  simData=[]; if(!ch1)initCharts(); resetChartData();
+  document.getElementById('logScroll').textContent='';
 
-  const Q      = +document.getElementById('sQ').value;
-  const Hook   = +document.getElementById('sHook').value;
-  const Hold   = +document.getElementById('sHold').value;
-  const ER     = +document.getElementById('sEng').value;
-  const Health = +document.getElementById('sHealth').value;
-  const PostH  = +document.getElementById('sT').value;
-  const F      = +document.getElementById('sF').value;
-  const H      = +document.getElementById('sH').value;
-  const S      = +document.getElementById('sSeed').value;
+  const Q=+document.getElementById('sQ').value, Hook=+document.getElementById('sHook').value,
+        Hold=+document.getElementById('sHold').value, ER=+document.getElementById('sEng').value,
+        Health=+document.getElementById('sHealth').value, PostH=+document.getElementById('sT').value,
+        F=+document.getElementById('sF').value, H=+document.getElementById('sH').value,
+        S=+document.getElementById('sSeed').value;
+  rng=mulberry32(S);
 
-  rng = mulberry32(S);
+  const eH=Hook/100, eHl=Hold/100;
+  const expTime=((1-eH)*SEC_SCROLL)+(eH*(1-eHl)*SEC_DROP)+(eH*eHl*SEC_HELD);
+  const as=calcAlgoScore(expTime,Health), ds=distState(as), startHM=hourMult(PostH);
 
-  const expectedHook = Hook / 100;
-  const expectedHold = Hold / 100;
-  const expectedTimePerImp =
-    ((1 - expectedHook) * SEC_SCROLL) +
-    (expectedHook * (1 - expectedHold) * SEC_DROP) +
-    (expectedHook * expectedHold * SEC_HELD);
+  document.getElementById('gaugeValue').textContent=as.toFixed(1);
+  document.getElementById('gaugeValue').style.color=ds.c;
+  document.getElementById('gaugeFill').style.width=as+'%';
+  document.getElementById('gaugeFill').style.background='linear-gradient(90deg,'+ds.c+','+ds.c+'88)';
+  document.getElementById('gaugeLabel').textContent=ds.icon+' '+ds.l;
+  document.getElementById('gaugeLabel').style.color=ds.c;
+  document.getElementById('gAvgTime').textContent=expTime.toFixed(1)+'s';
+  document.getElementById('gTimeMulti').textContent='x'+startHM.toFixed(1);
+  document.getElementById('gDistMult').textContent='x'+ds.m;
+  document.getElementById('gHealthPen').textContent=Health<50?'Shadow-ban':Health<80?'Kisitli':'Normal';
 
-  const as = calcAlgoScore(expectedTimePerImp, Health);
-  const ds = distState(as);
-  const startHM = hourMult(PostH);
+  addLog('[Baslangic] '+String(PostH).padStart(2,'0')+':00 | Skor:'+as.toFixed(1)+' | '+ds.icon+' '+ds.l+' | x'+ds.m, ds.c==='#f87171'?'log-bad':'log-good');
 
-  // Gauge
-  document.getElementById('gaugeValue').textContent   = as.toFixed(1);
-  document.getElementById('gaugeValue').style.color   = ds.c;
-  document.getElementById('gaugeFill').style.width    = as + '%';
-  document.getElementById('gaugeFill').style.background = 'linear-gradient(90deg,' + ds.c + ',' + ds.c + '88)';
-  document.getElementById('gaugeLabel').textContent   = ds.icon + ' ' + ds.l;
-  document.getElementById('gaugeLabel').style.color   = ds.c;
-  document.getElementById('gAvgTime').textContent     = expectedTimePerImp.toFixed(1) + 's';
-  document.getElementById('gTimeMulti').textContent   = 'x' + startHM.toFixed(1);
-  document.getElementById('gDistMult').textContent    = 'x' + ds.m;
-  document.getElementById('gHealthPen').textContent   = Health < 50 ? 'Shadow-ban' : Health < 80 ? 'Kisitli' : 'Normal';
-
-  const postLabel = String(PostH).padStart(2,'0') + ':00';
-  addLog('[Baslangic] ' + postLabel + ' paylasildi | Skor: ' + as.toFixed(1) + ' | ' + ds.icon + ' ' + ds.l + ' | Dagitim: x' + ds.m + ' | Saat: x' + startHM.toFixed(1), ds.c === '#f87171' ? 'log-bad' : 'log-good');
-
-  let totalImp = 0, totalTimeSec = 0, totalHooked = 0, totalHeld = 0;
-  let totalLikes = 0, totalComments = 0, totalShares = 0;
-  let tick = 0;
-
+  let tImp=0,tTime=0,tHooked=0,tHeld=0,tLikes=0,tComments=0,tShares=0,tick=0;
   function step() {
-    if (tick >= H) {
-      simTimer = null;
-      const totalHoursStr = (totalTimeSec / 3600).toFixed(1);
-      const erFinal = totalImp > 0 ? ((totalLikes + totalComments + totalShares) / totalImp * 100).toFixed(2) : '0';
-      document.getElementById('tickInfo').textContent = 'Tamamlandi — ' + H + 's | ' + totalImp.toLocaleString('tr-TR') + ' izlenme | ER: %' + erFinal;
-      addLog(' | TAMAMLANDI: ' + totalImp.toLocaleString('tr-TR') + ' toplam izlenme | ' + totalHoursStr + ' saat icerik suresi | ER %' + erFinal, 'log-good');
+    if (tick>=H) {
+      simTimer=null;
+      const er=tImp>0?((tLikes+tComments+tShares)/tImp*100).toFixed(2):'0';
+      document.getElementById('tickInfo').textContent='Tamamlandi — '+tImp.toLocaleString('tr-TR')+' izlenme | ER:%'+er;
+      addLog(' | TAMAMLANDI: '+tImp.toLocaleString('tr-TR')+' izlenme | '+(tTime/3600).toFixed(1)+'s ekran suresi | ER%'+er,'log-good');
       return;
     }
     tick++;
-    const absHour = PostH + tick;
-    const hm      = hourMult(absHour);
-    const noise   = 1 + (rng() - 0.5) * 0.15;
-    const imp     = Math.max(1, Math.round(F * ds.m * hm * 0.05 * noise));
-    const metrics = calcMetrics(imp, Q, Hook, Hold, ER);
+    const absH=PostH+tick, hm=hourMult(absH), noise=1+(rng()-.5)*.15;
+    const imp=Math.max(1,Math.round(F*ds.m*hm*0.05*noise));
+    const m=calcMetrics(imp,Q,Hook,Hold,ER);
+    tImp+=imp; tHooked+=m.hooked; tHeld+=m.held;
+    tLikes+=m.likes; tComments+=m.comments; tShares+=m.shares; tTime+=m.timeSec;
+    const tH=tTime/3600, avg=tTime/tImp;
 
-    totalImp      += imp;
-    totalHooked   += metrics.hooked;
-    totalHeld     += metrics.held;
-    totalLikes    += metrics.likes;
-    totalComments += metrics.comments;
-    totalShares   += metrics.shares;
-    totalTimeSec  += metrics.timeSec;
+    simData.push({ saat:tick, gercek_saat:((absH%24+24)%24), paylasim_saati:PostH,
+      gosterim:imp, hook_gecen:m.hooked, sonuna_izleyen:m.held,
+      begeni:m.likes, yorum:m.comments, paylasim_sayisi:m.shares,
+      sure_saniye:m.timeSec, birikimli_sure_saat:tH.toFixed(2),
+      ort_izleme_saniye:avg.toFixed(2), algoritma_skoru:as.toFixed(2),
+      dagilim_durumu:ds.l, saat_carpani:hm.toFixed(2) });
 
-    const totalTimeH  = totalTimeSec / 3600;
-    const avgTimePerV = totalTimeSec / totalImp;
-
-    simData.push({
-      saat: tick,
-      gercek_saat: ((absHour % 24 + 24) % 24),
-      paylasim_saati: PostH,
-      gosterim: imp,
-      hook_gecen: metrics.hooked,
-      sonuna_izleyen: metrics.held,
-      begeni: metrics.likes,
-      yorum: metrics.comments,
-      paylasim_sayisi: metrics.shares,
-      sure_saniye: metrics.timeSec,
-      birikimli_sure_saat: totalTimeH.toFixed(2),
-      ort_izleme_saniye: avgTimePerV.toFixed(2),
-      algoritma_skoru: as.toFixed(2),
-      dagilim_durumu: ds.l,
-      saat_carpani: hm.toFixed(2)
-    });
-
-    const hrDisplay = String(((absHour % 24 + 24) % 24)).padStart(2,'0');
-    ch1.data.labels.push('S' + tick + '(' + hrDisplay + ':00)');
-    ch1.data.datasets[0].data.push(totalTimeH.toFixed(2));
+    const hrD=String(((absH%24+24)%24)).padStart(2,'0');
+    ch1.data.labels.push('S'+tick+'('+hrD+':00)');
+    ch1.data.datasets[0].data.push(tH.toFixed(2));
     ch1.data.datasets[1].data.push(imp);
     ch1.update('none');
+    ch2.data.datasets[0].data=[tImp,tHooked,tHeld]; ch2.update('none');
+    if(tLikes+tComments+tShares>0){ch3.data.datasets[0].data=[tLikes,tComments,tShares];ch3.update('none');}
 
-    ch2.data.datasets[0].data = [totalImp, totalHooked, totalHeld];
-    ch2.update('none');
-
-    if (totalLikes + totalComments + totalShares > 0) {
-      ch3.data.datasets[0].data = [totalLikes, totalComments, totalShares];
-      ch3.update('none');
+    if(tick%6===0||tick===1){
+      const er=tImp>0?((tLikes+tComments+tShares)/tImp*100).toFixed(1):'0';
+      const hp=imp>0?(m.hooked/imp*100).toFixed(0):'0';
+      const hlp=m.hooked>0?(m.held/m.hooked*100).toFixed(0):'0';
+      const cls=hm>=1.5?'log-good':hm<0.7?'log-bad':'log-event';
+      addLog(' | [S'+tick+' '+hrD+':00] '+imp.toLocaleString('tr-TR')+' gosterim | Hook%'+hp+' | Hold%'+hlp+' | Sure'+(m.timeSec/3600).toFixed(2)+'h | ER%'+er, cls);
     }
-
-    if (tick % 6 === 0 || tick === 1) {
-      const erNow = totalImp > 0 ? ((totalLikes + totalComments + totalShares) / totalImp * 100).toFixed(1) : '0';
-      const hookPct = imp > 0 ? (metrics.hooked / imp * 100).toFixed(0) : '0';
-      const holdPct = metrics.hooked > 0 ? (metrics.held / metrics.hooked * 100).toFixed(0) : '0';
-      const cls = hm >= 1.5 ? 'log-good' : hm < 0.7 ? 'log-bad' : 'log-event';
-      addLog(' | [S' + tick + ' ' + hrDisplay + ':00] ' + imp.toLocaleString('tr-TR') + ' gosterim | Hook %' + hookPct + ' | Hold %' + holdPct + ' | Sure ' + (metrics.timeSec / 3600).toFixed(2) + 'h | ER %' + erNow, cls);
-    }
-
-    document.getElementById('statusBadge').textContent = ds.icon + ' ' + ds.l;
-    document.getElementById('statusBadge').style.color  = ds.c;
-    document.getElementById('tickInfo').textContent = 'Saat ' + tick + '/' + H + ' | ' + totalImp.toLocaleString('tr-TR') + ' izlenme | ' + totalTimeH.toFixed(1) + ' saat';
-
-    simTimer = setTimeout(step, 40);
+    document.getElementById('statusBadge').textContent=ds.icon+' '+ds.l;
+    document.getElementById('statusBadge').style.color=ds.c;
+    document.getElementById('tickInfo').textContent='Saat '+tick+'/'+H+' | '+tImp.toLocaleString('tr-TR')+' izlenme | '+tH.toFixed(1)+'h';
+    simTimer=setTimeout(step,40);
   }
-
-  requestAnimationFrame(function() { simTimer = setTimeout(step, 100); });
+  requestAnimationFrame(function(){simTimer=setTimeout(step,100);});
 }
 
-/* ============================================================
-   CSV DIŞA AKTARMA — Analiz için hazır sütunlu format
-   ============================================================ */
 function downloadCSV() {
-  if (!simData.length) { alert('Once simulasyonu calistirin!'); return; }
-  const cols = Object.keys(simData[0]);
-  let csv = cols.join(',') + '\n';
-  simData.forEach(function(r) { csv += cols.map(function(k) { return r[k]; }).join(',') + '\n'; });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'sosyal_medya_sim_seed' + document.getElementById('sSeed').value + '.csv';
+  if(!simData.length){alert('Once simulasyonu calistirin!');return;}
+  const cols=Object.keys(simData[0]);
+  let csv=cols.join(',')+'\n';
+  simData.forEach(function(r){csv+=cols.map(function(k){return r[k];}).join(',')+'\n';});
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='sosyal_medya_sim_seed'+document.getElementById('sSeed').value+'.csv';
   a.click();
 }
 
