@@ -222,7 +222,7 @@
     <input type="range" id="sEng" min="0" max="30" value="5">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">(Beğeni+Yorum+Paylaşım) / İzlenme. Videoyu bitirenler 3–4x daha fazla etkileşim üretir. Kaynak: Sprout Social 2024.</p>
+        <p class="cg-desc">(Beğeni+Yorum+Paylaşım) / İzlenme. Videoyu bitirenler 3–4x daha fazla etkileşim üretir. Oranlar; platform yetkililerinin kamuya açık açıklamaları ve uygulayıcı deneyimine dayalı yaklaşık kalibrasyondur, kesin ampirik değer değildir.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>%0–1: Pasif kitle</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>%2–5: Instagram ortalaması</span></div>
@@ -264,7 +264,7 @@
     <input type="range" id="sT" min="0" max="23" value="19" step="1">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">İçeriğin yayınlandığı saat. Simülasyon bu saatten ilerler; her tick'e doğru saat çarpanını uygular. Kaynak: Meta Business Suite.</p>
+        <p class="cg-desc">İçeriğin yayınlandığı saat. Simülasyon bu saatten ilerler; her tick'e doğru saat çarpanını uygular. Saat çarpanları; platform paylaşım-zamanı içgörüleri ve uygulayıcı deneyimine dayalı yaklaşık kalibrasyondur, kesin ampirik değer değildir.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>00:00–08:00: Düşük aktivite (×0.5)</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>09:00–17:00: Orta (×1.0–1.3)</span></div>
@@ -542,7 +542,7 @@ function runSim(){
 function downloadCSV(){
   if(!simData.length){alert('Once simulasyonu calistirin!');return;}
   var cols=Object.keys(simData[0]);
-  var csv=cols.join(','+'\n');
+  var csv=cols.join(',')+'\n';
   simData.forEach(function(r){csv+=cols.map(function(k){return r[k];}).join(',')+'\n';});
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');
