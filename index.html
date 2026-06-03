@@ -182,7 +182,7 @@
     <input type="range" id="sHook" min="0" max="100" value="45">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">İzleyicinin ilk 3s'yi geçme yüzdesi. TikTok/Reels'te en kritik sinyal; düşükse içerik geniş kitleye gösterilmez.</p>
+        <p class="cg-desc">İzleyicinin ilk 3s'yi geçme yüzdesi. TikTok/Reels'te en kritik sinyal; düşükse içerik geniş kitleye gösterilmez. Kaynak: TikTok Newsroom, "How TikTok recommends videos #ForYou" (Haz. 2020) — etkileşim sinyalleri arasında video izleme davranışı en güçlü gösterge olarak tanımlanmaktadır.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>%0–20: Zayıf, ilk karede kaydırılıyor</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>%25–35: Sektör ortalaması</span></div>
@@ -202,7 +202,7 @@
     <input type="range" id="sHold" min="0" max="100" value="50">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">Hook'tan geçen kullanıcıların sonuna kadar izleme yüzdesi. Yüksek hold = algoritma "değerli içerik" sayar, öneri havuzunu büyütür.</p>
+        <p class="cg-desc">Hook'tan geçen kullanıcıların sonuna kadar izleme yüzdesi. Yüksek hold = algoritma "değerli içerik" sayar, öneri havuzunu büyütür. Kaynak: TikTok Newsroom (Haz. 2020) — "Bir kullanıcının uzun bir videoyu başından sonuna izlemesi, zayıf bir sinyalden çok daha fazla ağırlık taşır" ifadesiyle video tamamlama en güçlü pozitif sinyal olarak belgelenmiştir.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>%0–30: İzleyici kaçıyor</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>%40–55: Sektör ortalaması</span></div>
@@ -222,7 +222,7 @@
     <input type="range" id="sEng" min="0" max="30" value="5">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">(Beğeni+Yorum+Paylaşım) / İzlenme. Videoyu bitirenler 3–4x daha fazla etkileşim üretir. Oranlar; platform yetkililerinin kamuya açık açıklamaları ve uygulayıcı deneyimine dayalı yaklaşık kalibrasyondur, kesin ampirik değer değildir.</p>
+        <p class="cg-desc">(Beğeni+Yorum+Paylaşım) / İzlenme. Videoyu bitirenler 3–4x daha fazla etkileşim üretir. Platform ortalamaları: TikTok ~%1.5, Instagram Reels ~%2.8, genel iyi aralık %1.3–3.5 (Hootsuite, 2025 — blog.hootsuite.com/average-engagement-rate). Beğeni/yorum/paylaşım dağılım ağırlıkları uygulayıcı deneyimine dayalı yaklaşık kalibrasyondur.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>%0–1: Pasif kitle</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>%2–5: Instagram ortalaması</span></div>
@@ -264,7 +264,7 @@
     <input type="range" id="sT" min="0" max="23" value="19" step="1">
     <div class="cg-details">
       <div class="cg-details-inner">
-        <p class="cg-desc">İçeriğin yayınlandığı saat. Simülasyon bu saatten ilerler; her tick'e doğru saat çarpanını uygular. Saat çarpanları; platform paylaşım-zamanı içgörüleri ve uygulayıcı deneyimine dayalı yaklaşık kalibrasyondur, kesin ampirik değer değildir.</p>
+        <p class="cg-desc">İçeriğin yayınlandığı saat. Simülasyon bu saatten ilerler; her tick'e doğru saat çarpanını uygular. Hootsuite'in 1M+ gönderi analizi (2025): Instagram için 15:00–21:00 Pazartesi, TikTok için 07:00–11:00 Perşembe pik saatler olarak belirlenmiştir (blog.hootsuite.com/best-time-to-post-on-social-media). Simülasyonun saat çarpanları bu genel eğilim doğrultusunda yaklaşık kalibre edilmiştir.</p>
         <div class="cg-bench">
           <div class="bench-row"><div class="bench-dot" style="background:#f87171"></div><span>00:00–08:00: Düşük aktivite (×0.5)</span></div>
           <div class="bench-row"><div class="bench-dot" style="background:#fbbf24"></div><span>09:00–17:00: Orta (×1.0–1.3)</span></div>
